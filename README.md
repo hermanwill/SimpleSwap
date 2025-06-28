@@ -20,11 +20,11 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
 
 2. **Automated Market Maker (AMM)**:
    - Uses the constant product formula: `x * y = k`
-   - Price discovery through reserve ratios with 0.3% trading fee
+   - Price discovery through reserve ratios with trading fee
    - Minimum locked liquidity (10,000 tokens) to prevent total pool drainage
 
 3. **Stack Optimization**:
-   - Internal helper functions (`_calculateLiquidityAmounts`, `_calculateWithdrawalAmounts`) prevent "stack too deep" compilation errors
+   - Internal helper function (`_calculateLiquidityAmounts`) prevents "stack too deep" compilation errors
    - Modular design improves code readability and gas efficiency
 
 4. **Events**:
@@ -40,42 +40,37 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
    - **Process**: 
      • Validates token addresses match EKA/EKB pair using `_isValidTokenPair()`
      • Calculates optimal token proportions via `_calculateLiquidityAmounts()`
-     • Maintains current pool ratio to prevent arbitrage
+     • Maintains current pool ratio
      • Ensures slippage protection with minimum amount requirements
      • Transfers tokens from user and mints LP tokens to recipient
    - **Returns**: `(actualAmountA, actualAmountB, liquidityTokens)` - actual amounts deposited and LP tokens minted
-   - **Gas Optimization**: Uses internal function to prevent stack overflow
 
 ### 2. `removeLiquidity(tokenA, tokenB, liquidityAmount, minimumAmountA, minimumAmountB, recipient, expirationTime)`
    - **Purpose**: Allows a user to withdraw their proportional share of the liquidity pool.
    - **Process**:
      • Validates user input and token pair compatibility
-     • Calculates proportional withdrawal amounts via `_calculateWithdrawalAmounts()`
+     • Calculates proportional withdrawal amounts based on current reserves and total supply
      • Burns user's LP tokens from their balance
      • Enforces slippage protection and deadline validation
      • Returns underlying tokens to specified recipient
    - **Returns**: `(withdrawnAmountA, withdrawnAmountB)` - amounts of underlying tokens withdrawn
-   - **Security**: Burns tokens before transfer to prevent reentrancy
 
 ### 3. `swapExactTokensForTokens(inputAmount, minimumOutput, tradingPath, recipient, expirationTime)`
    - **Purpose**: Swaps an exact amount of input tokens for output tokens with fee application.
    - **Process**:
      • Validates trading path contains exactly two tokens (EKA/EKB)
-     • Uses `_calculateSwapOutput()` for AMM calculations with 0.3% fee
-     • Applies constant product formula: `(x + Δx) * (y - Δy) = k`
+     • Uses `_calculateSwapOutput()` for AMM calculations with trading fee
      • Ensures minimum output amount for slippage protection
      • Executes atomic token transfers (input from user, output to recipient)
    - **Returns**: `outputAmounts[]` - array containing [inputAmount, actualOutputAmount]
-   - **Fee Structure**: 0.3% trading fee (997/1000 factor) applied to input amount
 
 ### 4. `getPrice(tokenA, tokenB)`
-   - **Purpose**: Returns the current price of tokenA denominated in tokenB.
+   - **Purpose**: Returns the current price of tokenA in terms of tokenB.
    - **Process**:
      • Validates tokens are part of the supported EKA-EKB pair
      • Calculates price ratio using current token reserves
      • Formula: `price = (reserveA * PRECISION) / reserveB`
-   - **Returns**: `currentPrice` - price ratio scaled by 1e18 for decimal precision
-   - **Note**: Price reflects instantaneous exchange rate without slippage
+   - **Returns**: `currentPrice` - price ratio
 
 ### 5. `getAmountOut(inputAmount, inputReserve, outputReserve)`
    - **Purpose**: Pure function to calculate expected output without fees for liquidity calculations.
@@ -84,7 +79,6 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
      • Uses simple ratio formula: `expectedOutput = (inputAmount * outputReserve) / inputReserve`
      • Used internally for liquidity provision calculations
    - **Returns**: `expectedOutput` - calculated output amount without trading fees
-   - **Usage**: Public function also used internally by liquidity functions
 
 ## Internal Helper Functions:
 **---------------------------**
@@ -94,14 +88,9 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
    - **Process**: Determines optimal token ratios, handles empty pool case, calculates LP tokens to mint.
    - **Returns**: Tuple of actual amounts and liquidity tokens.
 
-### `_calculateWithdrawalAmounts(tokenA, tokenB, liquidityAmount, minimumAmountA, minimumAmountB)`
-   - **Purpose**: Internal function to calculate proportional withdrawal amounts.
-   - **Process**: Computes token amounts based on LP token ratio, validates minimum requirements.
-   - **Returns**: Tuple of withdrawal amounts for both tokens.
-
 ### `_calculateSwapOutput(inputAmount, inputReserve, outputReserve)`
-   - **Purpose**: Internal function to calculate swap output with 0.3% trading fee applied.
-   - **Formula**: `outputAmount = (inputAmount * 997 * outputReserve) / (inputReserve * 1000 + inputAmount * 997)`
+   - **Purpose**: Internal function to calculate swap output with trading fee applied.
+   - **Process**: Applies fee factor to input amount before AMM calculation.
    - **Returns**: Output amount after fee deduction using constant product formula.
 
 ### `_isValidTokenPair(tokenA, tokenB)`

@@ -814,7 +814,7 @@
 						"tokenB": "Quote token address  "
 					},
 					"returns": {
-						"currentPrice": "Price ratio scaled by PRECISION (1e18)"
+						"currentPrice": "Price ratio"
 					}
 				},
 				"getReserves()": {
@@ -985,11 +985,11 @@
 			]
 		},
 		"SimpleSwap.sol": {
-			"keccak256": "0x13a419e182cda4af3aa7897a24bf5f6fd753c7e29e616a0c48f0203d5189b685",
+			"keccak256": "0x66d7231aacd7a4298d77f93c9e271ad0bbb10ebc8b3349742c7b9766a1753d1a",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://47e7bbb472fda4e7ae6d2825aeb8ef361081dc8ce6984a2c864dde515c306125",
-				"dweb:/ipfs/QmSi7Bv5fS8qtbYjE4d2GP7cRxpBjVjajczNLgtNt16K1Q"
+				"bzz-raw://d363445938f973aa494172f22c6b8de410920edf2df442885f18f94e8c2b3e37",
+				"dweb:/ipfs/QmUpftviB7LAcpCLdAxRcGMiXaZdgQrye8nrmyKdLq33Ph"
 			]
 		}
 	},

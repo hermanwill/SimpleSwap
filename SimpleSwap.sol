@@ -15,14 +15,14 @@ contract SimpleSwap is ERC20 {
     /// @dev Set to 1 to allow initial calculations without special handling
     uint256 private constant INITIAL_RESERVE = 1;
 
-    /// @notice Precision constant for 18-decimal calculations (1 × 10¹⁸)
+    /// @notice Precision constant for 18-decimal calculations
     uint256 private constant PRECISION = 1e18;
 
     /// @notice Minimum liquidity tokens locked permanently on first provision
     /// @dev Prevents liquidity drain attacks and maintains price stability
     uint256 private constant MINIMUM_LOCKED_LIQUIDITY = 10_000;
 
-    /// @notice Fee percentage applied to swaps (0.3% = 997/1000)
+    /// @notice Fee percentage applied to swaps
     uint256 private constant FEE_FACTOR = 997;
     uint256 private constant FEE_DENOMINATOR = 1000;
 
@@ -258,7 +258,7 @@ contract SimpleSwap is ERC20 {
      * @notice Returns current price of tokenA in terms of tokenB
      * @param tokenA Base token address
      * @param tokenB Quote token address  
-     * @return currentPrice Price ratio scaled by PRECISION (1e18)
+     * @return currentPrice Price ratio
      */
     function getPrice(address tokenA, address tokenB) external view returns (uint256 currentPrice) {
         require(_isValidTokenPair(tokenA, tokenB), "UnsupportedTokenPair");
@@ -294,8 +294,6 @@ contract SimpleSwap is ERC20 {
         internal pure returns (uint256 outputAmount) {
         require(inputReserve > 0 && outputReserve > 0, "InsufficientReserves");
         
-        // Apply 0.3% trading fee using constant product formula
-        // Formula: outputAmount = (inputAmount * FEE_FACTOR * outputReserve) / (inputReserve * FEE_DENOMINATOR + inputAmount * FEE_FACTOR)
         uint256 inputWithFee = inputAmount * FEE_FACTOR;
         uint256 numerator = inputWithFee * outputReserve;
         uint256 denominator = (inputReserve * FEE_DENOMINATOR) + inputWithFee;
