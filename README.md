@@ -1,6 +1,5 @@
 # SimpleSwap
 TPETHSimpleSwap
-# 🌀 SimpleSwap - Detailed Explanation
 
 ## Overview:
 **----------**
