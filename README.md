@@ -1,6 +1,5 @@
 # SimpleSwap
 TPETHSimpleSwap
-# 🌀 SimpleSwap - Detailed Explanation
 
 ## Overview:
 **----------**
@@ -106,61 +105,6 @@ The contract implements comprehensive validation with descriptive error messages
 - **Access Control**: Users can only withdraw their own liquidity shares
 - **Immutable Design**: No admin functions or upgrade mechanisms for maximum decentralization
 
-## Contract Architecture:
-**----------------------**
-```solidity
-contract SimpleSwap {
-    // Immutable token addresses
-    address public immutable tokenEKA;
-    address public immutable tokenEKB;
-    
-    // Pool state
-    uint256 public reserveEKA;
-    uint256 public reserveEKB;
-    uint256 public totalLiquidity;
-    mapping(address => uint256) public liquidityShares;
-    
-    // Core AMM functions + view functions
-}
-```
-
-## Usage Examples:
-**---------------**
-
-### Adding Initial Liquidity:
-```solidity
-// Approve tokens first
-IERC20(tokenEKA).approve(simpleSwap, 1000e18);
-IERC20(tokenEKB).approve(simpleSwap, 2000e18);
-
-// Add liquidity
-simpleSwap.addLiquidity(
-    tokenEKA, tokenEKB,
-    1000e18, 2000e18,    // Desired amounts
-    950e18, 1900e18,     // Minimum amounts (5% slippage)
-    msg.sender,
-    block.timestamp + 300 // 5 min deadline
-);
-```
-
-### Performing a Swap:
-```solidity
-// Approve input token
-IERC20(tokenEKA).approve(simpleSwap, 100e18);
-
-// Create path
-address[] memory path = new address[](2);
-path[0] = tokenEKA;
-path[1] = tokenEKB;
-
-// Execute swap
-simpleSwap.swapExactTokensForTokens(
-    100e18,              // Input amount
-    180e18,              // Minimum output
-    path,
-    msg.sender,
-    block.timestamp + 300
-);
 ```
 
 ## Deployment Requirements:
