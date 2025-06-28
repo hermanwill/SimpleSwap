@@ -1,386 +1,185 @@
 # SimpleSwap
 TPETHSimpleSwap
-# SimpleSwap Smart Contract
+# 🌀 SimpleSwap - Detailed Explanation
 
-A decentralized exchange (DEX) smart contract that replicates Uniswap functionality without depending on the Uniswap protocol. SimpleSwap enables automated market making (AMM) between two ERC-20 tokens: EKA and EKB.
+## Overview:
+**----------**
+SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solidity. Inspired by the core mechanics of Uniswap, it allows users to:
+1. Add liquidity to a pool of two ERC-20 tokens (EKA and EKB).
+2. Remove liquidity from an existing pool.
+3. Swap tokens between the EKA-EKB pair with an automatic pricing mechanism.
+4. Query token prices and expected swap outputs.
 
-## 🌟 Features
+## Core Concepts:
+**--------------**
+1. **Liquidity Pool**:
+   - The contract manages a single token pair (EKA, EKB) with dedicated storage variables.
+   - Pool structure contains:
+     • `totalLiquidity`: Total amount of liquidity shares issued.
+     • `liquidityShares`: Mapping of user addresses to their liquidity balance.
+     • `reserveEKA` and `reserveEKB`: Current token reserves in the pool.
 
-- **Automated Market Maker (AMM)**: Uses constant product formula (x * y = k)
-- **Liquidity Management**: Add and remove liquidity with slippage protection
-- **Token Swapping**: Exchange tokens with minimal price impact
-- **Price Discovery**: Real-time price calculation based on reserves
-- **Fee Structure**: 0.3% trading fee on all swaps
-- **Deadline Protection**: Time-based transaction validation
-- **Event Emission**: Comprehensive logging for transparency
+2. **Automated Market Maker (AMM)**:
+   - Uses the constant product formula: `x * y = k`
+   - Price discovery through reserve ratios
+   - 0.3% trading fee on all swaps
 
-## 🛠️ Architecture
+3. **Events**:
+   - `LiquidityAdded`: Emitted when a user provides liquidity to the pool.
+   - `LiquidityRemoved`: Emitted when a user withdraws liquidity.
+   - `TokensSwapped`: Emitted when a swap is successfully executed.
 
-### Supported Tokens
-- **Token A**: EKA (First token in the pair)
-- **Token B**: EKB (Second token in the pair)
+## Functions:
+**----------**
 
-### Core Components
-- **Reserves**: Track token balances in the liquidity pool
-- **Liquidity Shares**: Represent ownership stakes in the pool
-- **Price Oracle**: Calculate real-time exchange rates
-- **Fee System**: Automated fee collection on trades
+### 1. `addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, to, deadline)`
+   - **Purpose**: Allows a user to provide liquidity to the EKA-EKB token pair.
+   - **Process**: 
+     • Validates token addresses match EKA/EKB pair
+     • Calculates optimal token proportions maintaining pool ratio
+     • Ensures slippage protection with minimum amounts
+     • Transfers tokens from user to contract
+     • Mints and assigns liquidity shares to the `to` address
+   - **Returns**: `(amountA, amountB, liquidity)` - actual amounts added and shares minted
 
-## 📋 Contract Interface
+### 2. `removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline)`
+   - **Purpose**: Allows a user to withdraw their share of the liquidity pool.
+   - **Process**:
+     • Validates user owns sufficient liquidity shares
+     • Calculates proportional token amounts based on pool reserves
+     • Burns the user's liquidity shares
+     • Enforces slippage protection and deadline validation
+     • Returns tokenA and tokenB to the `to` address
+   - **Returns**: `(amountA, amountB)` - amounts of tokens withdrawn
 
-### Core Functions
+### 3. `swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline)`
+   - **Purpose**: Swaps an exact amount of input tokens for output tokens.
+   - **Process**:
+     • Validates path contains exactly two tokens (EKA/EKB)
+     • Uses constant product formula for price calculation
+     • Applies 0.3% trading fee
+     • Ensures minimum output amount for slippage protection
+     • Transfers input tokens from user and output tokens to `to` address
+   - **Returns**: `amounts[]` - array containing input and output amounts
 
-#### 1. Add Liquidity
+### 4. `getPrice(tokenA, tokenB)`
+   - **Purpose**: Returns the current price of tokenA denominated in tokenB.
+   - **Process**:
+     • Validates tokens are part of the EKA-EKB pair
+     • Calculates price ratio using current reserves
+   - **Returns**: `price` - scaled by 1e18 to support decimals
+
+### 5. `getAmountOut(amountIn, reserveIn, reserveOut)`
+   - **Purpose**: Pure function to calculate the output amount of a swap based on constant product formula.
+   - **Process**:
+     • Applies 0.3% fee (997/1000 of input amount)
+     • Uses formula: `amountOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997)`
+     • Ensures input and reserve values are valid
+   - **Returns**: `amountOut` - expected output amount
+
+## Mathematical Model:
+**-------------------**
+- **Constant Product Formula**: `x * y = k` where x and y are token reserves
+- **Price Calculation**: `price = reserveB / reserveA`
+- **Liquidity Shares** (first provision): `sqrt(amountA * amountB)`
+- **Liquidity Shares** (subsequent): `(amountA * totalLiquidity) / reserveA`
+- **Trading Fee**: 0.3% applied to input amount before swap calculation
+
+## Error Handling:
+**----------------**
+The contract implements comprehensive validation with descriptive error messages:
+- `"Transaction expired"` — Operation attempted after deadline
+- `"Invalid token pair"` — Tokens are not EKA/EKB or are identical
+- `"Amounts must be greater than zero"` — Input amounts are zero or invalid
+- `"Insufficient liquidity shares"` — User lacks required liquidity balance
+- `"Insufficient output amount"` — Swap output below minimum threshold
+- `"Insufficient liquidity"` — Pool reserves too low for operation
+- `"Invalid path length"` — Swap path doesn't contain exactly 2 tokens
+- `"Invalid recipient address"` — Destination address is zero address
+
+## Security Features:
+**------------------**
+- **Input Validation**: Comprehensive checks for all parameters including addresses, amounts, and deadlines
+- **Slippage Protection**: Minimum amount parameters prevent MEV attacks and excessive slippage
+- **Deadline Validation**: Time-based protection using `ensure(deadline)` modifier
+- **Reserve Management**: Proper balance tracking prevents pool drainage
+- **Access Control**: Users can only withdraw their own liquidity shares
+- **Immutable Design**: No admin functions or upgrade mechanisms for maximum decentralization
+
+## Contract Architecture:
+**----------------------**
 ```solidity
-function addLiquidity(
-    address tokenA,
-    address tokenB,
-    uint256 amountADesired,
-    uint256 amountBDesired,
-    uint256 amountAMin,
-    uint256 amountBMin,
-    address to,
-    uint256 deadline
-) external returns (uint256 amountA, uint256 amountB, uint256 liquidity)
+contract SimpleSwap {
+    // Immutable token addresses
+    address public immutable tokenEKA;
+    address public immutable tokenEKB;
+    
+    // Pool state
+    uint256 public reserveEKA;
+    uint256 public reserveEKB;
+    uint256 public totalLiquidity;
+    mapping(address => uint256) public liquidityShares;
+    
+    // Core AMM functions + view functions
+}
 ```
 
-**Purpose**: Add liquidity to the ERC-20 token pair pool
+## Usage Examples:
+**---------------**
 
-**Parameters**:
-- `tokenA`, `tokenB`: Token contract addresses (must be EKA/EKB)
-- `amountADesired`, `amountBDesired`: Desired amounts to deposit
-- `amountAMin`, `amountBMin`: Minimum acceptable amounts (slippage protection)
-- `to`: Recipient address for liquidity tokens
-- `deadline`: Transaction expiration timestamp
-
-**Returns**:
-- `amountA`, `amountB`: Actual amounts added to the pool
-- `liquidity`: Amount of liquidity shares minted
-
-**Process**:
-1. Validates token addresses and parameters
-2. Calculates optimal amounts maintaining pool ratio
-3. Transfers tokens from user to contract
-4. Mints liquidity shares proportional to contribution
-5. Updates reserve balances
-
-#### 2. Remove Liquidity
-```solidity
-function removeLiquidity(
-    address tokenA,
-    address tokenB,
-    uint256 liquidity,
-    uint256 amountAMin,
-    uint256 amountBMin,
-    address to,
-    uint256 deadline
-) external returns (uint256 amountA, uint256 amountB)
-```
-
-**Purpose**: Remove liquidity from the token pair pool
-
-**Parameters**:
-- `tokenA`, `tokenB`: Token contract addresses
-- `liquidity`: Amount of liquidity shares to burn
-- `amountAMin`, `amountBMin`: Minimum acceptable token amounts
-- `to`: Recipient address for withdrawn tokens
-- `deadline`: Transaction expiration timestamp
-
-**Returns**:
-- `amountA`, `amountB`: Amounts of tokens withdrawn
-
-**Process**:
-1. Validates user's liquidity share ownership
-2. Calculates proportional token amounts
-3. Burns liquidity shares
-4. Transfers tokens back to user
-5. Updates reserve balances
-
-#### 3. Swap Tokens
-```solidity
-function swapExactTokensForTokens(
-    uint256 amountIn,
-    uint256 amountOutMin,
-    address[] calldata path,
-    address to,
-    uint256 deadline
-) external returns (uint256[] memory amounts)
-```
-
-**Purpose**: Exchange exact amount of input tokens for output tokens
-
-**Parameters**:
-- `amountIn`: Exact amount of input tokens to swap
-- `amountOutMin`: Minimum acceptable output amount (slippage protection)
-- `path`: Array of token addresses [tokenIn, tokenOut]
-- `to`: Recipient address for output tokens
-- `deadline`: Transaction expiration timestamp
-
-**Returns**:
-- `amounts`: Array containing [amountIn, amountOut]
-
-**Process**:
-1. Validates input parameters and token addresses
-2. Calculates output amount using constant product formula
-3. Applies 0.3% trading fee
-4. Transfers input tokens from user
-5. Updates reserves and transfers output tokens
-
-#### 4. Get Price
-```solidity
-function getPrice(address tokenA, address tokenB) 
-    external view returns (uint256 price)
-```
-
-**Purpose**: Get current price of tokenA in terms of tokenB
-
-**Parameters**:
-- `tokenA`: Address of the token being priced
-- `tokenB`: Address of the quote token
-
-**Returns**:
-- `price`: Price ratio with 18 decimal precision
-
-**Calculation**: `price = (reserveB * 1e18) / reserveA`
-
-#### 5. Calculate Output Amount
-```solidity
-function getAmountOut(
-    uint256 amountIn,
-    uint256 reserveIn,
-    uint256 reserveOut
-) external pure returns (uint256 amountOut)
-```
-
-**Purpose**: Calculate expected output tokens for a given input amount
-
-**Parameters**:
-- `amountIn`: Amount of input tokens
-- `reserveIn`: Current reserve of input token
-- `reserveOut`: Current reserve of output token
-
-**Returns**:
-- `amountOut`: Expected amount of output tokens
-
-**Formula**: Uses constant product formula with 0.3% fee:
-```
-amountOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997)
-```
-
-## 📊 View Functions
-
-### Get Reserves
-```solidity
-function getReserves() external view returns (uint256 _reserveEKA, uint256 _reserveEKB)
-```
-Returns current token reserves in the pool.
-
-### Get Liquidity Shares
-```solidity
-function getLiquidityShares(address user) external view returns (uint256 shares)
-```
-Returns liquidity shares owned by a specific address.
-
-### Get Total Liquidity
-```solidity
-function getTotalLiquidity() external view returns (uint256 total)
-```
-Returns total liquidity shares issued by the contract.
-
-### Get Token Pair
-```solidity
-function getTokenPair() external view returns (address _tokenEKA, address _tokenEKB)
-```
-Returns the addresses of the supported token pair.
-
-## 🔥 Events
-
-### LiquidityAdded
-```solidity
-event LiquidityAdded(
-    address indexed provider,
-    uint256 amountA,
-    uint256 amountB,
-    uint256 liquidity
-)
-```
-Emitted when liquidity is added to the pool.
-
-### LiquidityRemoved
-```solidity
-event LiquidityRemoved(
-    address indexed provider,
-    uint256 amountA,
-    uint256 amountB,
-    uint256 liquidity
-)
-```
-Emitted when liquidity is removed from the pool.
-
-### TokensSwapped
-```solidity
-event TokensSwapped(
-    address indexed user,
-    address indexed tokenIn,
-    address indexed tokenOut,
-    uint256 amountIn,
-    uint256 amountOut
-)
-```
-Emitted when tokens are swapped.
-
-## 🔐 Security Features
-
-### Input Validation
-- Non-zero address checks for all addresses
-- Token pair validation (only EKA/EKB supported)
-- Amount validation (positive values required)
-- Deadline verification (prevents expired transactions)
-
-### Slippage Protection
-- Minimum amount parameters in liquidity operations
-- Minimum output amount in swaps
-- Prevents MEV attacks and sandwich trading
-
-### Access Control
-- Users can only remove their own liquidity
-- No admin functions or upgradability (immutable)
-- No pause mechanisms (always available)
-
-### Economic Security
-- Constant product formula prevents pool drainage
-- Trading fees accumulate in reserves
-- Liquidity share system prevents dilution attacks
-
-## 🚀 Deployment
-
-### Prerequisites
-- Solidity ^0.8.0
-- EKA token contract deployed
-- EKB token contract deployed
-
-### Constructor Parameters
-```solidity
-constructor(address _tokenEKA, address _tokenEKB)
-```
-
-### Deployment Steps
-1. Deploy EKA and EKB token contracts
-2. Deploy SimpleSwap with token addresses
-3. Users approve tokens for the SimpleSwap contract
-4. Add initial liquidity to bootstrap the pool
-
-## 💡 Usage Examples
-
-### Adding Liquidity
+### Adding Initial Liquidity:
 ```solidity
 // Approve tokens first
-EKA.approve(simpleSwapAddress, amountEKA);
-EKB.approve(simpleSwapAddress, amountEKB);
+IERC20(tokenEKA).approve(simpleSwap, 1000e18);
+IERC20(tokenEKB).approve(simpleSwap, 2000e18);
 
 // Add liquidity
 simpleSwap.addLiquidity(
-    EKA_ADDRESS,
-    EKB_ADDRESS,
-    1000 * 10**18,  // 1000 EKA
-    2000 * 10**18,  // 2000 EKB
-    950 * 10**18,   // Min 950 EKA (5% slippage)
-    1900 * 10**18,  // Min 1900 EKB (5% slippage)
+    tokenEKA, tokenEKB,
+    1000e18, 2000e18,    // Desired amounts
+    950e18, 1900e18,     // Minimum amounts (5% slippage)
     msg.sender,
-    block.timestamp + 300  // 5 minute deadline
+    block.timestamp + 300 // 5 min deadline
 );
 ```
 
-### Swapping Tokens
+### Performing a Swap:
 ```solidity
 // Approve input token
-EKA.approve(simpleSwapAddress, swapAmount);
+IERC20(tokenEKA).approve(simpleSwap, 100e18);
 
-// Perform swap
+// Create path
 address[] memory path = new address[](2);
-path[0] = EKA_ADDRESS;  // Input token
-path[1] = EKB_ADDRESS;  // Output token
+path[0] = tokenEKA;
+path[1] = tokenEKB;
 
+// Execute swap
 simpleSwap.swapExactTokensForTokens(
-    100 * 10**18,       // 100 EKA input
-    180 * 10**18,       // Min 180 EKB output
+    100e18,              // Input amount
+    180e18,              // Minimum output
     path,
     msg.sender,
     block.timestamp + 300
 );
 ```
 
-### Calculating Price
-```solidity
-uint256 priceEKAinEKB = simpleSwap.getPrice(EKA_ADDRESS, EKB_ADDRESS);
-// Returns price with 18 decimal places
-```
+## Deployment Requirements:
+**-------------------------**
+- **Solidity Version**: ^0.8.0
+- **Dependencies**: EKA and EKB token contracts must be deployed first
+- **Constructor Parameters**: `(address _tokenEKA, address _tokenEKB)`
+- **Gas Optimization**: Uses efficient algorithms and minimal storage
 
-## 🧮 Mathematical Model
+## Limitations:
+**-------------**
+- Supports only EKA-EKB token pair (no multi-pair functionality)
+- Fixed 0.3% trading fee (not configurable)
+- No governance mechanism or parameter adjustment
+- Single-hop swaps only (no routing through multiple pairs)
 
-### Constant Product Formula
-The AMM uses the constant product formula: **x × y = k**
-
-Where:
-- `x` = Reserve of token A
-- `y` = Reserve of token B  
-- `k` = Constant (product of reserves)
-
-### Price Impact
-Price impact increases with trade size relative to pool depth:
-```
-Price Impact = 1 - (reserveOut - amountOut) / reserveOut
-```
-
-### Liquidity Share Calculation
-For first liquidity provision:
-```
-liquidity = sqrt(amountA * amountB)
-```
-
-For subsequent provisions:
-```
-liquidity = min(
-    (amountA * totalLiquidity) / reserveA,
-    (amountB * totalLiquidity) / reserveB
-)
-```
-
-## ⚠️ Important Notes
-
-### Limitations
-- Only supports EKA-EKB token pair
-- No multi-hop swapping capabilities
-- Fixed 0.3% trading fee (not adjustable)
-- No governance mechanism
-
-### Risks
-- **Impermanent Loss**: Liquidity providers face impermanent loss risk
-- **Smart Contract Risk**: Code has not been audited
-- **Token Risk**: Dependent on underlying token implementations
-- **Slippage**: Large trades may experience significant price impact
-
-### Best Practices
-- Always set appropriate slippage tolerance
-- Check token allowances before transactions
-- Monitor gas costs for small trades
-- Understand impermanent loss before providing liquidity
-
-## 📄 License
-
-MIT License - see LICENSE file for details.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Open a pull request
-
-## 📞 Support
-
-For questions or issues, please open a GitHub issue or contact the development team.
-
----
-
-**Disclaimer**: This smart contract is provided as-is without warranties. Users should conduct their own security audits before deploying to mainnet.
+## Risk Considerations:
+**--------------------**
+- **Impermanent Loss**: Liquidity providers face potential impermanent loss
+- **Smart Contract Risk**: Code should be audited before mainnet deployment
+- **Slippage Risk**: Large trades may experience significant price impact
+- **Token Risk**: Dependent on proper implementation of underlying ERC-20 tokens
