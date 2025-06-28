@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {TokenA} from "./TokenA.sol";
+import {TokenB} from "./TokenB.sol";
 
 /**
  * @title SimpleSwap
  * @dev Decentralized exchange contract for swapping between TokenA (EKA) and TokenB (EKB)
  * @dev Implements automated market maker functionality with liquidity provision
  */
-contract SimpleSwap is ERC20 {
+contract SimpleSwap {
 
     /// @notice Default reserve value used when pool is empty to prevent division by zero
     /// @dev Set to 1 to allow initial calculations without special handling
@@ -26,11 +26,17 @@ contract SimpleSwap is ERC20 {
     uint256 private constant FEE_FACTOR = 997;
     uint256 private constant FEE_DENOMINATOR = 1000;
 
-    /// @notice Address of TokenA (EKA) contract
-    address public immutable ekaToken;
+    /// @notice TokenA (EKA) contract instance
+    TokenA public immutable tokenEKA;
     
-    /// @notice Address of TokenB (EKB) contract  
-    address public immutable ekbToken;
+    /// @notice TokenB (EKB) contract instance
+    TokenB public immutable tokenEKB;
+
+    /// @notice Total liquidity shares issued
+    uint256 public totalLiquidity;
+    
+    /// @notice Mapping of user addresses to their liquidity shares
+    mapping(address => uint256) public liquidityShares;
 
     /// @notice Emitted when liquidity is added to the pool
     event LiquidityProvided(address indexed provider, uint256 ekaAmount, uint256 ekbAmount, uint256 liquidityMinted);
@@ -42,19 +48,19 @@ contract SimpleSwap is ERC20 {
     event TokenExchange(address indexed trader, address indexed recipient, uint256 inputAmount, uint256 outputAmount);
 
     /**
-     * @dev Constructor initializes the contract with TokenA and TokenB addresses
-     * @param _ekaToken Address of the deployed TokenA (EKA) contract
-     * @param _ekbToken Address of the deployed TokenB (EKB) contract
+     * @dev Constructor initializes the contract with TokenA and TokenB instances
+     * @param _tokenEKA Address of the deployed TokenA (EKA) contract
+     * @param _tokenEKB Address of the deployed TokenB (EKB) contract
      */
-    constructor(address _ekaToken, address _ekbToken) ERC20("EKA-EKB Liquidity", "EKA-EKB-LP") {
-        require(_ekaToken != address(0) && _ekbToken != address(0), "InvalidTokenAddress");
-        require(_ekaToken != _ekbToken, "IdenticalTokens");
+    constructor(address _tokenEKA, address _tokenEKB) {
+        require(_tokenEKA != address(0) && _tokenEKB != address(0), "InvalidTokenAddress");
+        require(_tokenEKA != _tokenEKB, "IdenticalTokens");
         
-        ekaToken = _ekaToken;
-        ekbToken = _ekbToken;
+        tokenEKA = TokenA(_tokenEKA);
+        tokenEKB = TokenB(_tokenEKB);
         
-        // Mint minimum liquidity to contract to prevent total drain
-        _mint(address(this), MINIMUM_LOCKED_LIQUIDITY);
+        // Initialize with minimum liquidity to prevent total drain
+        totalLiquidity = MINIMUM_LOCKED_LIQUIDITY;
     }
 
     /// @notice Validates that function is called before specified deadline
@@ -104,10 +110,17 @@ contract SimpleSwap is ERC20 {
             minimumAmountB
         );
 
-        // Execute transfers and mint
-        require(IERC20(tokenA).transferFrom(msg.sender, address(this), actualAmountA), "TokenATransferFailed");
-        require(IERC20(tokenB).transferFrom(msg.sender, address(this), actualAmountB), "TokenBTransferFailed");
-        _mint(recipient, liquidityTokens);
+        // Execute transfers and mint liquidity shares
+        if (tokenA == address(tokenEKA)) {
+            require(tokenEKA.transferFrom(msg.sender, address(this), actualAmountA), "TokenATransferFailed");
+            require(tokenEKB.transferFrom(msg.sender, address(this), actualAmountB), "TokenBTransferFailed");
+        } else {
+            require(tokenEKB.transferFrom(msg.sender, address(this), actualAmountA), "TokenATransferFailed");
+            require(tokenEKA.transferFrom(msg.sender, address(this), actualAmountB), "TokenBTransferFailed");
+        }
+        
+        totalLiquidity += liquidityTokens;
+        liquidityShares[recipient] += liquidityTokens;
 
         emit LiquidityProvided(msg.sender, actualAmountA, actualAmountB, liquidityTokens);
     }
@@ -134,8 +147,8 @@ contract SimpleSwap is ERC20 {
     ) internal view returns (uint256 actualAmountA, uint256 actualAmountB, uint256 liquidityTokens) {
         
         // Get current reserves
-        uint256 reserveA = IERC20(tokenA).balanceOf(address(this));
-        uint256 reserveB = IERC20(tokenB).balanceOf(address(this));
+        uint256 reserveA = _getTokenBalance(tokenA);
+        uint256 reserveB = _getTokenBalance(tokenB);
         
         // Handle empty pool case
         if (reserveA == 0 && reserveB == 0) {
@@ -157,10 +170,14 @@ contract SimpleSwap is ERC20 {
         }
         
         // Calculate liquidity tokens
-        uint256 supply = totalSupply();
-        uint256 liquidityA = (actualAmountA * supply) / reserveA;
-        uint256 liquidityB = (actualAmountB * supply) / reserveB;
-        liquidityTokens = liquidityA < liquidityB ? liquidityA : liquidityB;
+        if (totalLiquidity == MINIMUM_LOCKED_LIQUIDITY) {
+            // First liquidity provision
+            liquidityTokens = _sqrt(actualAmountA * actualAmountB);
+        } else {
+            uint256 liquidityA = (actualAmountA * totalLiquidity) / reserveA;
+            uint256 liquidityB = (actualAmountB * totalLiquidity) / reserveB;
+            liquidityTokens = liquidityA < liquidityB ? liquidityA : liquidityB;
+        }
     }
 
     /**
@@ -189,26 +206,32 @@ contract SimpleSwap is ERC20 {
         require(_isValidTokenPair(tokenA, tokenB), "UnsupportedTokenPair");
         require(recipient != address(0), "InvalidRecipient");
         require(liquidityAmount > 0, "ZeroLiquidityAmount");
+        require(liquidityShares[msg.sender] >= liquidityAmount, "InsufficientLiquidityShares");
         
-        // Get current reserves and total supply
-        uint256 currentReserveA = IERC20(tokenA).balanceOf(address(this));
-        uint256 currentReserveB = IERC20(tokenB).balanceOf(address(this));
-        uint256 currentTotalSupply = totalSupply();
+        // Get current reserves
+        uint256 currentReserveA = _getTokenBalance(tokenA);
+        uint256 currentReserveB = _getTokenBalance(tokenB);
         
         // Calculate proportional token amounts to return
-        withdrawnAmountA = (liquidityAmount * currentReserveA) / currentTotalSupply;
-        withdrawnAmountB = (liquidityAmount * currentReserveB) / currentTotalSupply;
+        withdrawnAmountA = (liquidityAmount * currentReserveA) / totalLiquidity;
+        withdrawnAmountB = (liquidityAmount * currentReserveB) / totalLiquidity;
         
         // Validate minimum amounts for slippage protection
         require(withdrawnAmountA >= minimumAmountA, "InsufficientTokenAAmount");
         require(withdrawnAmountB >= minimumAmountB, "InsufficientTokenBAmount");
 
-        // Transfer tokens to recipient
-        require(IERC20(tokenA).transfer(recipient, withdrawnAmountA), "TokenATransferFailed");
-        require(IERC20(tokenB).transfer(recipient, withdrawnAmountB), "TokenBTransferFailed");
+        // Burn liquidity tokens first
+        liquidityShares[msg.sender] -= liquidityAmount;
+        totalLiquidity -= liquidityAmount;
 
-        // Burn liquidity tokens from sender
-        _burn(msg.sender, liquidityAmount);
+        // Transfer tokens to recipient
+        if (tokenA == address(tokenEKA)) {
+            require(tokenEKA.transfer(recipient, withdrawnAmountA), "TokenATransferFailed");
+            require(tokenEKB.transfer(recipient, withdrawnAmountB), "TokenBTransferFailed");
+        } else {
+            require(tokenEKB.transfer(recipient, withdrawnAmountA), "TokenATransferFailed");
+            require(tokenEKA.transfer(recipient, withdrawnAmountB), "TokenBTransferFailed");
+        }
 
         emit LiquidityWithdrawn(msg.sender, withdrawnAmountA, withdrawnAmountB, liquidityAmount);
     }
@@ -235,16 +258,21 @@ contract SimpleSwap is ERC20 {
         require(_isValidTokenPair(tradingPath[0], tradingPath[1]), "UnsupportedTokenPair");
 
         // Get current reserves for input and output tokens
-        uint256 inputReserve = IERC20(tradingPath[0]).balanceOf(address(this));
-        uint256 outputReserve = IERC20(tradingPath[1]).balanceOf(address(this));
+        uint256 inputReserve = _getTokenBalance(tradingPath[0]);
+        uint256 outputReserve = _getTokenBalance(tradingPath[1]);
 
         // Calculate output amount using AMM formula with fee
         uint256 actualOutput = _calculateSwapOutput(inputAmount, inputReserve, outputReserve);
         require(actualOutput >= minimumOutput, "InsufficientOutputAmount");
 
         // Execute token transfers
-        require(IERC20(tradingPath[0]).transferFrom(msg.sender, address(this), inputAmount), "InputTransferFailed");
-        require(IERC20(tradingPath[1]).transfer(recipient, actualOutput), "OutputTransferFailed");
+        if (tradingPath[0] == address(tokenEKA)) {
+            require(tokenEKA.transferFrom(msg.sender, address(this), inputAmount), "InputTransferFailed");
+            require(tokenEKB.transfer(recipient, actualOutput), "OutputTransferFailed");
+        } else {
+            require(tokenEKB.transferFrom(msg.sender, address(this), inputAmount), "InputTransferFailed");
+            require(tokenEKA.transfer(recipient, actualOutput), "OutputTransferFailed");
+        }
         
         // Prepare return array
         outputAmounts = new uint256[](2);
@@ -263,8 +291,8 @@ contract SimpleSwap is ERC20 {
     function getPrice(address tokenA, address tokenB) external view returns (uint256 currentPrice) {
         require(_isValidTokenPair(tokenA, tokenB), "UnsupportedTokenPair");
         
-        uint256 reserveA = IERC20(tokenA).balanceOf(address(this));
-        uint256 reserveB = IERC20(tokenB).balanceOf(address(this));
+        uint256 reserveA = _getTokenBalance(tokenA);
+        uint256 reserveB = _getTokenBalance(tokenB);
         require(reserveA > 0 && reserveB > 0, "InsufficientReserves");
         
         return (reserveA * PRECISION) / reserveB;
@@ -308,7 +336,38 @@ contract SimpleSwap is ERC20 {
      * @return isValid True if tokens form a valid EKA-EKB pair
      */
     function _isValidTokenPair(address tokenA, address tokenB) internal view returns (bool isValid) {
-        return (tokenA == ekaToken && tokenB == ekbToken) || (tokenA == ekbToken && tokenB == ekaToken);
+        return (tokenA == address(tokenEKA) && tokenB == address(tokenEKB)) || 
+               (tokenA == address(tokenEKB) && tokenB == address(tokenEKA));
+    }
+
+    /**
+     * @dev Internal function to get token balance for a given token address
+     * @param token Token address to check balance for
+     * @return balance Current balance of the token in this contract
+     */
+    function _getTokenBalance(address token) internal view returns (uint256 balance) {
+        if (token == address(tokenEKA)) {
+            return tokenEKA.balanceOf(address(this));
+        } else if (token == address(tokenEKB)) {
+            return tokenEKB.balanceOf(address(this));
+        } else {
+            revert("UnsupportedToken");
+        }
+    }
+
+    /**
+     * @dev Internal function to calculate square root using Babylonian method
+     * @param x Input value
+     * @return y Square root of x
+     */
+    function _sqrt(uint256 x) internal pure returns (uint256 y) {
+        if (x == 0) return 0;
+        uint256 z = (x + 1) / 2;
+        y = x;
+        while (z < y) {
+            y = z;
+            z = (x / z + z) / 2;
+        }
     }
 
     /**
@@ -317,8 +376,8 @@ contract SimpleSwap is ERC20 {
      * @return ekbReserve Current EKB token balance in contract
      */
     function getReserves() external view returns (uint256 ekaReserve, uint256 ekbReserve) {
-        ekaReserve = IERC20(ekaToken).balanceOf(address(this));
-        ekbReserve = IERC20(ekbToken).balanceOf(address(this));
+        ekaReserve = tokenEKA.balanceOf(address(this));
+        ekbReserve = tokenEKB.balanceOf(address(this));
     }
 
     /**
@@ -327,7 +386,24 @@ contract SimpleSwap is ERC20 {
      * @return tokenB Address of EKB token contract
      */
     function getSupportedTokens() external view returns (address tokenA, address tokenB) {
-        tokenA = ekaToken;
-        tokenB = ekbToken;
+        tokenA = address(tokenEKA);
+        tokenB = address(tokenEKB);
+    }
+
+    /**
+     * @notice Returns liquidity shares owned by a user
+     * @param user Address to check liquidity shares for
+     * @return shares Amount of liquidity shares owned by the user
+     */
+    function getLiquidityShares(address user) external view returns (uint256 shares) {
+        return liquidityShares[user];
+    }
+
+    /**
+     * @notice Returns total liquidity in the pool
+     * @return total Total amount of liquidity shares issued
+     */
+    function getTotalLiquidity() external view returns (uint256 total) {
+        return totalLiquidity;
     }
 }

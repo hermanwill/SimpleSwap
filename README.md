@@ -12,20 +12,21 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
 ## Core Concepts:
 **--------------**
 1. **Liquidity Pool Architecture**:
-   - The contract manages a single token pair (EKA, EKB) using separate TokenA.sol and TokenB.sol contracts.
-   - Pool structure inherits from ERC20 for native LP token functionality:
-     • `totalSupply()`: Total amount of liquidity tokens issued.
-     • `balanceOf(user)`: User's liquidity token balance.
-     • `ekaToken` and `ekbToken`: Immutable addresses of the supported token contracts.
+   - The contract manages a single token pair (EKA, EKB) using direct imports from TokenA.sol and TokenB.sol contracts.
+   - Pool structure uses custom liquidity share management:
+     • `totalLiquidity`: Total amount of liquidity shares issued.
+     • `liquidityShares`: Mapping of user addresses to their liquidity balance.
+     • `tokenEKA` and `tokenEKB`: Immutable instances of the imported token contracts.
 
 2. **Automated Market Maker (AMM)**:
    - Uses the constant product formula: `x * y = k`
    - Price discovery through reserve ratios with trading fee
    - Minimum locked liquidity (10,000 tokens) to prevent total pool drainage
 
-3. **Stack Optimization**:
-   - Internal helper function (`_calculateLiquidityAmounts`) prevents "stack too deep" compilation errors
-   - Modular design improves code readability and gas efficiency
+3. **Direct Token Integration**:
+   - Direct integration with TokenA and TokenB contracts without OpenZeppelin dependencies
+   - Custom liquidity share system instead of ERC20 inheritance
+   - Specific token transfer handling for each imported contract
 
 4. **Events**:
    - `LiquidityProvided`: Emitted when a user adds liquidity to the pool.
@@ -40,19 +41,20 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
    - **Process**: 
      • Validates token addresses match EKA/EKB pair using `_isValidTokenPair()`
      • Calculates optimal token proportions via `_calculateLiquidityAmounts()`
+     • Uses direct token transfer methods from imported TokenA and TokenB contracts
      • Maintains current pool ratio
      • Ensures slippage protection with minimum amount requirements
-     • Transfers tokens from user and mints LP tokens to recipient
-   - **Returns**: `(actualAmountA, actualAmountB, liquidityTokens)` - actual amounts deposited and LP tokens minted
+     • Updates liquidity shares manually in the mapping system
+   - **Returns**: `(actualAmountA, actualAmountB, liquidityTokens)` - actual amounts deposited and liquidity shares allocated
 
 ### 2. `removeLiquidity(tokenA, tokenB, liquidityAmount, minimumAmountA, minimumAmountB, recipient, expirationTime)`
    - **Purpose**: Allows a user to withdraw their proportional share of the liquidity pool.
    - **Process**:
-     • Validates user input and token pair compatibility
-     • Calculates proportional withdrawal amounts based on current reserves and total supply
-     • Burns user's LP tokens from their balance
+     • Validates user input, token pair compatibility, and sufficient liquidity shares ownership
+     • Calculates proportional withdrawal amounts based on current reserves and total liquidity
+     • Burns user's liquidity shares from the mapping system
      • Enforces slippage protection and deadline validation
-     • Returns underlying tokens to specified recipient
+     • Uses direct token transfer methods to return underlying tokens to recipient
    - **Returns**: `(withdrawnAmountA, withdrawnAmountB)` - amounts of underlying tokens withdrawn
 
 ### 3. `swapExactTokensForTokens(inputAmount, minimumOutput, tradingPath, recipient, expirationTime)`
@@ -60,14 +62,16 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
    - **Process**:
      • Validates trading path contains exactly two tokens (EKA/EKB)
      • Uses `_calculateSwapOutput()` for AMM calculations with trading fee
+     • Determines correct token instance (TokenA or TokenB) for transfers
      • Ensures minimum output amount for slippage protection
-     • Executes atomic token transfers (input from user, output to recipient)
+     • Executes atomic token transfers using specific contract methods
    - **Returns**: `outputAmounts[]` - array containing [inputAmount, actualOutputAmount]
 
 ### 4. `getPrice(tokenA, tokenB)`
    - **Purpose**: Returns the current price of tokenA in terms of tokenB.
    - **Process**:
      • Validates tokens are part of the supported EKA-EKB pair
+     • Uses `_getTokenBalance()` helper to retrieve current reserves
      • Calculates price ratio using current token reserves
      • Formula: `price = (reserveA * PRECISION) / reserveB`
    - **Returns**: `currentPrice` - price ratio
@@ -85,8 +89,8 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
 
 ### `_calculateLiquidityAmounts(tokenA, tokenB, desiredAmountA, desiredAmountB, minimumAmountA, minimumAmountB)`
    - **Purpose**: Internal function to calculate optimal liquidity amounts and prevent stack overflow.
-   - **Process**: Determines optimal token ratios, handles empty pool case, calculates LP tokens to mint.
-   - **Returns**: Tuple of actual amounts and liquidity tokens.
+   - **Process**: Uses `_getTokenBalance()` to retrieve reserves, determines optimal token ratios, handles empty pool case with square root calculation for first provision, calculates liquidity shares to allocate.
+   - **Returns**: Tuple of actual amounts and liquidity shares.
 
 ### `_calculateSwapOutput(inputAmount, inputReserve, outputReserve)`
    - **Purpose**: Internal function to calculate swap output with trading fee applied.
@@ -95,11 +99,47 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
 
 ### `_isValidTokenPair(tokenA, tokenB)`
    - **Purpose**: Internal validation function to ensure token pair is supported EKA-EKB combination.
+   - **Process**: Compares addresses with the imported TokenA and TokenB contract instances.
    - **Returns**: Boolean indicating if the token pair is valid.
+
+### `_getTokenBalance(token)`
+   - **Purpose**: Internal helper function to get balance for a specific token address.
+   - **Process**: Determines which imported token contract to use (TokenA or TokenB) and calls the appropriate balanceOf method.
+   - **Returns**: Current balance of the specified token in this contract.
+
+### `_sqrt(x)`
+   - **Purpose**: Internal function to calculate square root using Babylonian method.
+   - **Process**: Used for calculating initial liquidity shares on first provision.
+   - **Returns**: Square root of input value.
+
+## View Functions:
+**---------------**
+
+### `getReserves()`
+   - **Purpose**: Returns current reserves of both tokens in the pool.
+   - **Process**: Calls balanceOf on both imported token contracts.
+   - **Returns**: `(ekaReserve, ekbReserve)` - current token balances.
+
+### `getSupportedTokens()`
+   - **Purpose**: Returns the addresses of supported token contracts.
+   - **Process**: Returns addresses of the imported TokenA and TokenB instances.
+   - **Returns**: `(tokenA, tokenB)` - addresses of EKA and EKB contracts.
+
+### `getLiquidityShares(user)`
+   - **Purpose**: Returns liquidity shares owned by a specific user.
+   - **Process**: Queries the liquidityShares mapping.
+   - **Returns**: `shares` - amount of liquidity shares owned by the user.
+
+### `getTotalLiquidity()`
+   - **Purpose**: Returns total liquidity shares in the pool.
+   - **Process**: Returns the totalLiquidity state variable.
+   - **Returns**: `total` - total amount of liquidity shares issued.
 
 ## Contract Architecture:
 **----------------------**
-- **Base Contract**: Inherits from ERC20 for native LP token functionality
+- **Base Contract**: Standalone contract without ERC20 inheritance
+- **Direct Imports**: TokenA and TokenB contracts imported directly from local files
 - **Constants**: INITIAL_RESERVE (1), PRECISION (1e18), MINIMUM_LOCKED_LIQUIDITY (10,000), FEE_FACTOR (997), FEE_DENOMINATOR (1000)
-- **Immutable Variables**: ekaToken address (TokenA.sol deployment), ekbToken address (TokenB.sol deployment)
+- **Immutable Instances**: tokenEKA (TokenA instance), tokenEKB (TokenB instance)
+- **Liquidity Management**: Custom mapping-based system for tracking user shares
 - **Core Components**: AMM functions, internal helper functions, view functions for pool state queries
