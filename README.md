@@ -11,119 +11,106 @@ SimpleSwap is a decentralized exchange (DEX) smart contract implemented in Solid
 
 ## Core Concepts:
 **--------------**
-1. **Liquidity Pool**:
-   - The contract manages a single token pair (EKA, EKB) with dedicated storage variables.
-   - Pool structure contains:
-     • `totalLiquidity`: Total amount of liquidity shares issued.
-     • `liquidityShares`: Mapping of user addresses to their liquidity balance.
-     • `reserveEKA` and `reserveEKB`: Current token reserves in the pool.
+1. **Liquidity Pool Architecture**:
+   - The contract manages a single token pair (EKA, EKB) using separate TokenA.sol and TokenB.sol contracts.
+   - Pool structure inherits from ERC20 for native LP token functionality:
+     • `totalSupply()`: Total amount of liquidity tokens issued.
+     • `balanceOf(user)`: User's liquidity token balance.
+     • `ekaToken` and `ekbToken`: Immutable addresses of the supported token contracts.
 
 2. **Automated Market Maker (AMM)**:
    - Uses the constant product formula: `x * y = k`
-   - Price discovery through reserve ratios
-   - 0.3% trading fee on all swaps
+   - Price discovery through reserve ratios with 0.3% trading fee
+   - Minimum locked liquidity (10,000 tokens) to prevent total pool drainage
 
-3. **Events**:
-   - `LiquidityAdded`: Emitted when a user provides liquidity to the pool.
-   - `LiquidityRemoved`: Emitted when a user withdraws liquidity.
-   - `TokensSwapped`: Emitted when a swap is successfully executed.
+3. **Stack Optimization**:
+   - Internal helper functions (`_calculateLiquidityAmounts`, `_calculateWithdrawalAmounts`) prevent "stack too deep" compilation errors
+   - Modular design improves code readability and gas efficiency
+
+4. **Events**:
+   - `LiquidityProvided`: Emitted when a user adds liquidity to the pool.
+   - `LiquidityWithdrawn`: Emitted when a user removes liquidity.
+   - `TokenExchange`: Emitted when a swap is successfully executed.
 
 ## Functions:
 **----------**
 
-### 1. `addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, to, deadline)`
+### 1. `addLiquidity(tokenA, tokenB, desiredAmountA, desiredAmountB, minimumAmountA, minimumAmountB, recipient, expirationTime)`
    - **Purpose**: Allows a user to provide liquidity to the EKA-EKB token pair.
    - **Process**: 
-     • Validates token addresses match EKA/EKB pair
-     • Calculates optimal token proportions maintaining pool ratio
-     • Ensures slippage protection with minimum amounts
-     • Transfers tokens from user to contract
-     • Mints and assigns liquidity shares to the `to` address
-   - **Returns**: `(amountA, amountB, liquidity)` - actual amounts added and shares minted
+     • Validates token addresses match EKA/EKB pair using `_isValidTokenPair()`
+     • Calculates optimal token proportions via `_calculateLiquidityAmounts()`
+     • Maintains current pool ratio to prevent arbitrage
+     • Ensures slippage protection with minimum amount requirements
+     • Transfers tokens from user and mints LP tokens to recipient
+   - **Returns**: `(actualAmountA, actualAmountB, liquidityTokens)` - actual amounts deposited and LP tokens minted
+   - **Gas Optimization**: Uses internal function to prevent stack overflow
 
-### 2. `removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline)`
-   - **Purpose**: Allows a user to withdraw their share of the liquidity pool.
+### 2. `removeLiquidity(tokenA, tokenB, liquidityAmount, minimumAmountA, minimumAmountB, recipient, expirationTime)`
+   - **Purpose**: Allows a user to withdraw their proportional share of the liquidity pool.
    - **Process**:
-     • Validates user owns sufficient liquidity shares
-     • Calculates proportional token amounts based on pool reserves
-     • Burns the user's liquidity shares
+     • Validates user input and token pair compatibility
+     • Calculates proportional withdrawal amounts via `_calculateWithdrawalAmounts()`
+     • Burns user's LP tokens from their balance
      • Enforces slippage protection and deadline validation
-     • Returns tokenA and tokenB to the `to` address
-   - **Returns**: `(amountA, amountB)` - amounts of tokens withdrawn
+     • Returns underlying tokens to specified recipient
+   - **Returns**: `(withdrawnAmountA, withdrawnAmountB)` - amounts of underlying tokens withdrawn
+   - **Security**: Burns tokens before transfer to prevent reentrancy
 
-### 3. `swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline)`
-   - **Purpose**: Swaps an exact amount of input tokens for output tokens.
+### 3. `swapExactTokensForTokens(inputAmount, minimumOutput, tradingPath, recipient, expirationTime)`
+   - **Purpose**: Swaps an exact amount of input tokens for output tokens with fee application.
    - **Process**:
-     • Validates path contains exactly two tokens (EKA/EKB)
-     • Uses constant product formula for price calculation
-     • Applies 0.3% trading fee
+     • Validates trading path contains exactly two tokens (EKA/EKB)
+     • Uses `_calculateSwapOutput()` for AMM calculations with 0.3% fee
+     • Applies constant product formula: `(x + Δx) * (y - Δy) = k`
      • Ensures minimum output amount for slippage protection
-     • Transfers input tokens from user and output tokens to `to` address
-   - **Returns**: `amounts[]` - array containing input and output amounts
+     • Executes atomic token transfers (input from user, output to recipient)
+   - **Returns**: `outputAmounts[]` - array containing [inputAmount, actualOutputAmount]
+   - **Fee Structure**: 0.3% trading fee (997/1000 factor) applied to input amount
 
 ### 4. `getPrice(tokenA, tokenB)`
    - **Purpose**: Returns the current price of tokenA denominated in tokenB.
    - **Process**:
-     • Validates tokens are part of the EKA-EKB pair
-     • Calculates price ratio using current reserves
-   - **Returns**: `price` - scaled by 1e18 to support decimals
+     • Validates tokens are part of the supported EKA-EKB pair
+     • Calculates price ratio using current token reserves
+     • Formula: `price = (reserveA * PRECISION) / reserveB`
+   - **Returns**: `currentPrice` - price ratio scaled by 1e18 for decimal precision
+   - **Note**: Price reflects instantaneous exchange rate without slippage
 
-### 5. `getAmountOut(amountIn, reserveIn, reserveOut)`
-   - **Purpose**: Pure function to calculate the output amount of a swap based on constant product formula.
+### 5. `getAmountOut(inputAmount, inputReserve, outputReserve)`
+   - **Purpose**: Pure function to calculate expected output without fees for liquidity calculations.
    - **Process**:
-     • Applies 0.3% fee (997/1000 of input amount)
-     • Uses formula: `amountOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997)`
-     • Ensures input and reserve values are valid
-   - **Returns**: `amountOut` - expected output amount
+     • Validates reserve values are positive (prevents division by zero)
+     • Uses simple ratio formula: `expectedOutput = (inputAmount * outputReserve) / inputReserve`
+     • Used internally for liquidity provision calculations
+   - **Returns**: `expectedOutput` - calculated output amount without trading fees
+   - **Usage**: Public function also used internally by liquidity functions
 
-## Mathematical Model:
-**-------------------**
-- **Constant Product Formula**: `x * y = k` where x and y are token reserves
-- **Price Calculation**: `price = reserveB / reserveA`
-- **Liquidity Shares** (first provision): `sqrt(amountA * amountB)`
-- **Liquidity Shares** (subsequent): `(amountA * totalLiquidity) / reserveA`
-- **Trading Fee**: 0.3% applied to input amount before swap calculation
+## Internal Helper Functions:
+**---------------------------**
 
-## Error Handling:
-**----------------**
-The contract implements comprehensive validation with descriptive error messages:
-- `"Transaction expired"` — Operation attempted after deadline
-- `"Invalid token pair"` — Tokens are not EKA/EKB or are identical
-- `"Amounts must be greater than zero"` — Input amounts are zero or invalid
-- `"Insufficient liquidity shares"` — User lacks required liquidity balance
-- `"Insufficient output amount"` — Swap output below minimum threshold
-- `"Insufficient liquidity"` — Pool reserves too low for operation
-- `"Invalid path length"` — Swap path doesn't contain exactly 2 tokens
-- `"Invalid recipient address"` — Destination address is zero address
+### `_calculateLiquidityAmounts(tokenA, tokenB, desiredAmountA, desiredAmountB, minimumAmountA, minimumAmountB)`
+   - **Purpose**: Internal function to calculate optimal liquidity amounts and prevent stack overflow.
+   - **Process**: Determines optimal token ratios, handles empty pool case, calculates LP tokens to mint.
+   - **Returns**: Tuple of actual amounts and liquidity tokens.
 
-## Security Features:
-**------------------**
-- **Input Validation**: Comprehensive checks for all parameters including addresses, amounts, and deadlines
-- **Slippage Protection**: Minimum amount parameters prevent MEV attacks and excessive slippage
-- **Deadline Validation**: Time-based protection using `ensure(deadline)` modifier
-- **Reserve Management**: Proper balance tracking prevents pool drainage
-- **Access Control**: Users can only withdraw their own liquidity shares
-- **Immutable Design**: No admin functions or upgrade mechanisms for maximum decentralization
+### `_calculateWithdrawalAmounts(tokenA, tokenB, liquidityAmount, minimumAmountA, minimumAmountB)`
+   - **Purpose**: Internal function to calculate proportional withdrawal amounts.
+   - **Process**: Computes token amounts based on LP token ratio, validates minimum requirements.
+   - **Returns**: Tuple of withdrawal amounts for both tokens.
 
-```
+### `_calculateSwapOutput(inputAmount, inputReserve, outputReserve)`
+   - **Purpose**: Internal function to calculate swap output with 0.3% trading fee applied.
+   - **Formula**: `outputAmount = (inputAmount * 997 * outputReserve) / (inputReserve * 1000 + inputAmount * 997)`
+   - **Returns**: Output amount after fee deduction using constant product formula.
 
-## Deployment Requirements:
-**-------------------------**
-- **Solidity Version**: ^0.8.0
-- **Dependencies**: EKA and EKB token contracts must be deployed first
-- **Constructor Parameters**: `(address _tokenEKA, address _tokenEKB)`
-- **Gas Optimization**: Uses efficient algorithms and minimal storage
+### `_isValidTokenPair(tokenA, tokenB)`
+   - **Purpose**: Internal validation function to ensure token pair is supported EKA-EKB combination.
+   - **Returns**: Boolean indicating if the token pair is valid.
 
-## Limitations:
-**-------------**
-- Supports only EKA-EKB token pair (no multi-pair functionality)
-- Fixed 0.3% trading fee (not configurable)
-- No governance mechanism or parameter adjustment
-- Single-hop swaps only (no routing through multiple pairs)
-
-## Risk Considerations:
-**--------------------**
-- **Impermanent Loss**: Liquidity providers face potential impermanent loss
-- **Smart Contract Risk**: Code should be audited before mainnet deployment
-- **Slippage Risk**: Large trades may experience significant price impact
-- **Token Risk**: Dependent on proper implementation of underlying ERC-20 tokens
+## Contract Architecture:
+**----------------------**
+- **Base Contract**: Inherits from ERC20 for native LP token functionality
+- **Constants**: INITIAL_RESERVE (1), PRECISION (1e18), MINIMUM_LOCKED_LIQUIDITY (10,000), FEE_FACTOR (997), FEE_DENOMINATOR (1000)
+- **Immutable Variables**: ekaToken address (TokenA.sol deployment), ekbToken address (TokenB.sol deployment)
+- **Core Components**: AMM functions, internal helper functions, view functions for pool state queries
