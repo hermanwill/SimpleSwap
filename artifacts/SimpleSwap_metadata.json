@@ -33,23 +33,23 @@
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "ekaAmount",
+						"name": "amountA",
 						"type": "uint256"
 					},
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "ekbAmount",
+						"name": "amountB",
 						"type": "uint256"
 					},
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "liquidityMinted",
+						"name": "liquidity",
 						"type": "uint256"
 					}
 				],
-				"name": "LiquidityProvided",
+				"name": "LiquidityAdded",
 				"type": "event"
 			},
 			{
@@ -64,23 +64,23 @@
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "ekaAmount",
+						"name": "amountA",
 						"type": "uint256"
 					},
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "ekbAmount",
+						"name": "amountB",
 						"type": "uint256"
 					},
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "liquidityBurned",
+						"name": "liquidity",
 						"type": "uint256"
 					}
 				],
-				"name": "LiquidityWithdrawn",
+				"name": "LiquidityRemoved",
 				"type": "event"
 			},
 			{
@@ -89,29 +89,35 @@
 					{
 						"indexed": true,
 						"internalType": "address",
-						"name": "trader",
+						"name": "user",
 						"type": "address"
 					},
 					{
 						"indexed": true,
 						"internalType": "address",
-						"name": "recipient",
+						"name": "tokenIn",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "tokenOut",
 						"type": "address"
 					},
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "inputAmount",
+						"name": "amountIn",
 						"type": "uint256"
 					},
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "outputAmount",
+						"name": "amountOut",
 						"type": "uint256"
 					}
 				],
-				"name": "TokenExchange",
+				"name": "TokensSwapped",
 				"type": "event"
 			},
 			{
@@ -128,32 +134,32 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "desiredAmountA",
+						"name": "amountADesired",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "desiredAmountB",
+						"name": "amountBDesired",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "minimumAmountA",
+						"name": "amountAMin",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "minimumAmountB",
+						"name": "amountBMin",
 						"type": "uint256"
 					},
 					{
 						"internalType": "address",
-						"name": "recipient",
+						"name": "to",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "expirationTime",
+						"name": "deadline",
 						"type": "uint256"
 					}
 				],
@@ -161,17 +167,17 @@
 				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "actualAmountA",
+						"name": "amountA",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "actualAmountB",
+						"name": "amountB",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "liquidityTokens",
+						"name": "liquidity",
 						"type": "uint256"
 					}
 				],
@@ -182,17 +188,17 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "inputAmount",
+						"name": "amountIn",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "inputReserve",
+						"name": "reserveIn",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "outputReserve",
+						"name": "reserveOut",
 						"type": "uint256"
 					}
 				],
@@ -200,7 +206,7 @@
 				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "expectedOutput",
+						"name": "amountOut",
 						"type": "uint256"
 					}
 				],
@@ -243,7 +249,7 @@
 				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "currentPrice",
+						"name": "price",
 						"type": "uint256"
 					}
 				],
@@ -256,12 +262,12 @@
 				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "ekaReserve",
+						"name": "reserveEKA",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "ekbReserve",
+						"name": "reserveEKB",
 						"type": "uint256"
 					}
 				],
@@ -332,27 +338,27 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "liquidityAmount",
+						"name": "liquidity",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "minimumAmountA",
+						"name": "amountAMin",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "minimumAmountB",
+						"name": "amountBMin",
 						"type": "uint256"
 					},
 					{
 						"internalType": "address",
-						"name": "recipient",
+						"name": "to",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "expirationTime",
+						"name": "deadline",
 						"type": "uint256"
 					}
 				],
@@ -360,12 +366,12 @@
 				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "withdrawnAmountA",
+						"name": "amountA",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "withdrawnAmountB",
+						"name": "amountB",
 						"type": "uint256"
 					}
 				],
@@ -376,27 +382,27 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "inputAmount",
+						"name": "amountIn",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "minimumOutput",
+						"name": "amountOutMin",
 						"type": "uint256"
 					},
 					{
 						"internalType": "address[]",
-						"name": "tradingPath",
+						"name": "path",
 						"type": "address[]"
 					},
 					{
 						"internalType": "address",
-						"name": "recipient",
+						"name": "to",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "expirationTime",
+						"name": "deadline",
 						"type": "uint256"
 					}
 				],
@@ -404,7 +410,7 @@
 				"outputs": [
 					{
 						"internalType": "uint256[]",
-						"name": "outputAmounts",
+						"name": "amounts",
 						"type": "uint256[]"
 					}
 				],
@@ -456,21 +462,20 @@
 			"kind": "dev",
 			"methods": {
 				"addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)": {
-					"details": "Calculates optimal token amounts based on current pool ratios",
 					"params": {
-						"desiredAmountA": "Maximum amount of tokenA willing to deposit",
-						"desiredAmountB": "Maximum amount of tokenB willing to deposit",
-						"expirationTime": "Transaction deadline timestamp",
-						"minimumAmountA": "Minimum amount of tokenA to accept (slippage protection)",
-						"minimumAmountB": "Minimum amount of tokenB to accept (slippage protection)",
-						"recipient": "Address that will receive the liquidity tokens",
+						"amountADesired": "Maximum amount of tokenA willing to deposit",
+						"amountAMin": "Minimum amount of tokenA to accept",
+						"amountBDesired": "Maximum amount of tokenB willing to deposit",
+						"amountBMin": "Minimum amount of tokenB to accept",
+						"deadline": "Transaction deadline timestamp",
+						"to": "Address that will receive the liquidity tokens",
 						"tokenA": "Address of first token (must be EKA or EKB)",
 						"tokenB": "Address of second token (must be EKA or EKB)"
 					},
 					"returns": {
-						"actualAmountA": "Actual amount of tokenA deposited",
-						"actualAmountB": "Actual amount of tokenB deposited",
-						"liquidityTokens": "Amount of LP tokens minted to recipient"
+						"amountA": "Actual amount of tokenA deposited",
+						"amountB": "Actual amount of tokenB deposited",
+						"liquidity": "Amount of LP tokens minted to recipient"
 					}
 				},
 				"constructor": {
@@ -482,12 +487,12 @@
 				},
 				"getAmountOut(uint256,uint256,uint256)": {
 					"params": {
-						"inputAmount": "Amount of input tokens",
-						"inputReserve": "Current reserve of input token",
-						"outputReserve": "Current reserve of output token"
+						"amountIn": "Amount of input tokens",
+						"reserveIn": "Current reserve of input token",
+						"reserveOut": "Current reserve of output token"
 					},
 					"returns": {
-						"expectedOutput": "Calculated output amount"
+						"amountOut": "Calculated output amount"
 					}
 				},
 				"getLiquidityShares(address)": {
@@ -504,13 +509,13 @@
 						"tokenB": "Quote token address  "
 					},
 					"returns": {
-						"currentPrice": "Price ratio"
+						"price": "Price ratio"
 					}
 				},
 				"getReserves()": {
 					"returns": {
-						"ekaReserve": "Current EKA token balance in contract",
-						"ekbReserve": "Current EKB token balance in contract"
+						"reserveEKA": "Current EKA token balance in contract",
+						"reserveEKB": "Current EKB token balance in contract"
 					}
 				},
 				"getSupportedTokens()": {
@@ -526,38 +531,30 @@
 				},
 				"removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)": {
 					"params": {
-						"expirationTime": "Transaction deadline timestamp",
-						"liquidityAmount": "Amount of LP tokens to burn",
-						"minimumAmountA": "Minimum amount of tokenA to receive",
-						"minimumAmountB": "Minimum amount of tokenB to receive",
-						"recipient": "Address that will receive the underlying tokens",
+						"amountAMin": "Minimum amount of tokenA to receive",
+						"amountBMin": "Minimum amount of tokenB to receive",
+						"deadline": "Transaction deadline timestamp",
+						"liquidity": "Amount of LP tokens to burn",
+						"to": "Address that will receive the underlying tokens",
 						"tokenA": "Address of first token (must be EKA or EKB)",
 						"tokenB": "Address of second token (must be EKA or EKB)"
 					},
 					"returns": {
-						"withdrawnAmountA": "Amount of tokenA returned to recipient",
-						"withdrawnAmountB": "Amount of tokenB returned to recipient"
+						"amountA": "Amount of tokenA returned to recipient",
+						"amountB": "Amount of tokenB returned to recipient"
 					}
 				},
 				"swapExactTokensForTokens(uint256,uint256,address[],address,uint256)": {
 					"params": {
-						"expirationTime": "Transaction deadline timestamp",
-						"inputAmount": "Exact amount of input tokens to trade",
-						"minimumOutput": "Minimum acceptable amount of output tokens",
-						"recipient": "Address that will receive the output tokens",
-						"tradingPath": "Array containing [inputToken, outputToken] addresses"
+						"amountIn": "Exact amount of input tokens to trade",
+						"amountOutMin": "Minimum acceptable amount of output tokens",
+						"deadline": "Transaction deadline timestamp",
+						"path": "Array containing [inputToken, outputToken] addresses",
+						"to": "Address that will receive the output tokens"
 					},
 					"returns": {
-						"outputAmounts": "Array containing [inputAmount, actualOutputAmount]"
+						"amounts": "Array containing [inputAmount, actualOutputAmount]"
 					}
-				}
-			},
-			"stateVariables": {
-				"INITIAL_RESERVE": {
-					"details": "Set to 1 to allow initial calculations without special handling"
-				},
-				"MINIMUM_LOCKED_LIQUIDITY": {
-					"details": "Prevents liquidity drain attacks and maintains price stability"
 				}
 			},
 			"title": "SimpleSwap",
@@ -565,13 +562,13 @@
 		},
 		"userdoc": {
 			"events": {
-				"LiquidityProvided(address,uint256,uint256,uint256)": {
+				"LiquidityAdded(address,uint256,uint256,uint256)": {
 					"notice": "Emitted when liquidity is added to the pool"
 				},
-				"LiquidityWithdrawn(address,uint256,uint256,uint256)": {
+				"LiquidityRemoved(address,uint256,uint256,uint256)": {
 					"notice": "Emitted when liquidity is removed from the pool"
 				},
-				"TokenExchange(address,address,uint256,uint256)": {
+				"TokensSwapped(address,address,address,uint256,uint256)": {
 					"notice": "Emitted when tokens are swapped"
 				}
 			},
@@ -581,7 +578,7 @@
 					"notice": "Adds liquidity to the EKA/EKB trading pair"
 				},
 				"getAmountOut(uint256,uint256,uint256)": {
-					"notice": "Calculates expected output amount for a given input without fees"
+					"notice": "Calculates expected output amount for a given input"
 				},
 				"getLiquidityShares(address)": {
 					"notice": "Returns liquidity shares owned by a user"
@@ -789,11 +786,11 @@
 			]
 		},
 		"SimpleSwap.sol": {
-			"keccak256": "0x24a87ba8512255d2695169cd20701ae136068c43bb131f683388a0a160c59f85",
+			"keccak256": "0xe60a759fb2bb13081181c4685815b8c32964fbe112b786e636d79563a556def6",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://0decef8717fcf58d89c32ccc07064ce577c8ab349b8a2c2ef3ab732220bbd87a",
-				"dweb:/ipfs/QmWqSxv4rw8wcn5XCxK8dVWbVwcXRBq5YhL6UQkrysMYon"
+				"bzz-raw://a55df3c19017b720a1ab5c2b53746722aa7ebc33511c54eb195f048f525bd220",
+				"dweb:/ipfs/QmTAfz6nz5Wx3zP7TokgU3SLXgKSiXEabjSt6Sv1QpCLNH"
 			]
 		},
 		"TokenA.sol": {
