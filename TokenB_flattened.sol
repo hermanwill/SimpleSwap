@@ -4135,7 +4135,9 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712, Nonces {
 
 
 // Compatible with OpenZeppelin Contracts ^5.0.0
-pragma solidity ^0.8.27;
+pragma solidity ^0.8.27;
+
+
 
 contract TokenB is ERC20, ERC20Permit {
     constructor(address recipient) ERC20("TokenB", "EKB") ERC20Permit("TokenB") {
