@@ -88,7 +88,7 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -107,7 +107,7 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "who",
+						"name": "account",
 						"type": "address"
 					}
 				],
@@ -144,7 +144,7 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -173,7 +173,7 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -190,7 +190,7 @@
 			}
 		],
 		"devdoc": {
-			"details": "A simple decentralized exchange contract that mimics Uniswap functionalitySupports swapping between two tokens: EKA (tokenA) and EKB (tokenB)",
+			"details": "Decentralized exchange contract for swapping between TokenA (EKA) and TokenB (EKB)Implements automated market maker functionality with liquidity provision",
 			"kind": "dev",
 			"methods": {},
 			"title": "SimpleSwap",
@@ -219,11 +219,11 @@
 	},
 	"sources": {
 		"SimpleSwap.sol": {
-			"keccak256": "0xd892a75633a91ed48d2da21556c303e970feff0941dab3340fc97f0f7b76660a",
+			"keccak256": "0xd07ea276ae4dd84a0140dd2b892dc0ce46e1ef7278366834bc5f8ac496c6d45f",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://dc6dafbef02abd94cedeaeb1740c3a8d1f833bf6f390afb07e8cf6547e95e251",
-				"dweb:/ipfs/QmTdgAszc9g8YKWeLZSUgSgHcVnuDfY4nuN1HB8SkpvESu"
+				"bzz-raw://adcac00c135e650c5f582b6c35c75c6dab071f4cfececd1f6e35a6662b36bf35",
+				"dweb:/ipfs/QmXASu8UA3wrnXgmHQKkitkZ4pofu2wN1C8aPDmvtkh2sf"
 			]
 		}
 	},

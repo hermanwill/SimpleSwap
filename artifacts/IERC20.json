@@ -141,7 +141,7 @@
 				},
 				{
 					"internalType": "uint256",
-					"name": "value",
+					"name": "amount",
 					"type": "uint256"
 				}
 			],
@@ -160,7 +160,7 @@
 			"inputs": [
 				{
 					"internalType": "address",
-					"name": "who",
+					"name": "account",
 					"type": "address"
 				}
 			],
@@ -197,7 +197,7 @@
 				},
 				{
 					"internalType": "uint256",
-					"name": "value",
+					"name": "amount",
 					"type": "uint256"
 				}
 			],
@@ -226,7 +226,7 @@
 				},
 				{
 					"internalType": "uint256",
-					"name": "value",
+					"name": "amount",
 					"type": "uint256"
 				}
 			],
