@@ -6,56 +6,6 @@
 	"output": {
 		"abi": [
 			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "owner",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "spender",
-						"type": "address"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "value",
-						"type": "uint256"
-					}
-				],
-				"name": "Approval",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "from",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "to",
-						"type": "address"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "value",
-						"type": "uint256"
-					}
-				],
-				"name": "Transfer",
-				"type": "event"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -190,10 +140,8 @@
 			}
 		],
 		"devdoc": {
-			"details": "Decentralized exchange contract for swapping between TokenA (EKA) and TokenB (EKB)Implements automated market maker functionality with liquidity provision",
 			"kind": "dev",
 			"methods": {},
-			"title": "SimpleSwap",
 			"version": 1
 		},
 		"userdoc": {
@@ -219,11 +167,11 @@
 	},
 	"sources": {
 		"SimpleSwap.sol": {
-			"keccak256": "0xd07ea276ae4dd84a0140dd2b892dc0ce46e1ef7278366834bc5f8ac496c6d45f",
+			"keccak256": "0x9a21d00127a766e09a35886a85d6a1a13881999437897499b0994cbac654c2fa",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://adcac00c135e650c5f582b6c35c75c6dab071f4cfececd1f6e35a6662b36bf35",
-				"dweb:/ipfs/QmXASu8UA3wrnXgmHQKkitkZ4pofu2wN1C8aPDmvtkh2sf"
+				"bzz-raw://b3e4714b9d6fe8c05a2c2e8dcf6e1dc6dc1c57e58ca30cba033058eea1bb9b34",
+				"dweb:/ipfs/QmaiqpRviUtQRvsSHZTSoVPdvoJGoiunS9PVspUXvw6kY5"
 			]
 		}
 	},
