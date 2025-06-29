@@ -86,7 +86,7 @@ contract SimpleSwap {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external ensure(deadline) returns (uint256[] memory amounts) {
+    ) external ensure(deadline) {
         
         require(path.length == 2, "Invalid path");
         require(to != address(0), "Invalid recipient");
@@ -96,10 +96,6 @@ contract SimpleSwap {
 
         _executeTransferFrom(path[0], msg.sender, address(this), amountIn);
         _executeTransfer(path[1], to, amountOut);
-        
-        amounts = new uint256[](2);
-        amounts[0] = amountIn;
-        amounts[1] = amountOut;
         
         emit TokensSwapped(msg.sender, path[0], path[1], amountIn, amountOut);
     }

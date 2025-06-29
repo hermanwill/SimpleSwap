@@ -407,13 +407,7 @@
 					}
 				],
 				"name": "swapExactTokensForTokens",
-				"outputs": [
-					{
-						"internalType": "uint256[]",
-						"name": "amounts",
-						"type": "uint256[]"
-					}
-				],
+				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
 			},
@@ -485,11 +479,11 @@
 	},
 	"sources": {
 		"SimpleSwap.sol": {
-			"keccak256": "0x506de5a19df19f70960aab17568664b713c804d0a00a47fa7413b3d4046b1936",
+			"keccak256": "0xfc00932ad623cc3767a60fc4d2b8248b6e5e8f6439e09aa570749d34ba7397f7",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://7ae43e7af67e08dc141020d39d6e0e966502e7f75e447dfd022eac1a0098eae7",
-				"dweb:/ipfs/QmTSuM8LCvaq7Jf8joNUoVF4PM78SewsgMot5nCaszwvmQ"
+				"bzz-raw://7f19fa67c8422f0686acdc6c0ed3d172c3406da409b7b981a0230ceac43cdaf5",
+				"dweb:/ipfs/QmdaC9t7nevTNJ678D3bfaQ6NLmnT5zRyy3Uv7EUDDpGsd"
 			]
 		}
 	},
