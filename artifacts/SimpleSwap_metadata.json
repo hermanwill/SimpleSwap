@@ -9,17 +9,42 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "_tokenEKA",
+						"name": "_tokenA",
 						"type": "address"
 					},
 					{
 						"internalType": "address",
-						"name": "_tokenEKB",
+						"name": "_tokenB",
 						"type": "address"
 					}
 				],
 				"stateMutability": "nonpayable",
 				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					}
+				],
+				"name": "Approval",
+				"type": "event"
 			},
 			{
 				"anonymous": false,
@@ -121,15 +146,40 @@
 				"type": "event"
 			},
 			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					}
+				],
+				"name": "Transfer",
+				"type": "event"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "tokenA",
+						"name": "_tokenA",
 						"type": "address"
 					},
 					{
 						"internalType": "address",
-						"name": "tokenB",
+						"name": "_tokenB",
 						"type": "address"
 					},
 					{
@@ -187,6 +237,86 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "allowance",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "approve",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "balanceOf",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "decimals",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "uint256",
 						"name": "amountIn",
 						"type": "uint256"
@@ -236,12 +366,12 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "tokenA",
+						"name": "_tokenA",
 						"type": "address"
 					},
 					{
 						"internalType": "address",
-						"name": "tokenB",
+						"name": "_tokenB",
 						"type": "address"
 					}
 				],
@@ -262,12 +392,12 @@
 				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "reserveEKA",
+						"name": "_reserveA",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "reserveEKB",
+						"name": "_reserveB",
 						"type": "uint256"
 					}
 				],
@@ -280,12 +410,12 @@
 				"outputs": [
 					{
 						"internalType": "address",
-						"name": "tokenA",
+						"name": "_tokenA",
 						"type": "address"
 					},
 					{
 						"internalType": "address",
-						"name": "tokenB",
+						"name": "_tokenB",
 						"type": "address"
 					}
 				],
@@ -306,19 +436,13 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"name": "liquidityShares",
+				"inputs": [],
+				"name": "name",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "string",
 						"name": "",
-						"type": "uint256"
+						"type": "string"
 					}
 				],
 				"stateMutability": "view",
@@ -328,12 +452,12 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "tokenA",
+						"name": "_tokenA",
 						"type": "address"
 					},
 					{
 						"internalType": "address",
-						"name": "tokenB",
+						"name": "_tokenB",
 						"type": "address"
 					},
 					{
@@ -379,6 +503,32 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "reserveA",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "reserveB",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -413,7 +563,20 @@
 			},
 			{
 				"inputs": [],
-				"name": "tokenEKA",
+				"name": "symbol",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "tokenA",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -426,7 +589,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "tokenEKB",
+				"name": "tokenB",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -439,7 +602,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "totalLiquidity",
+				"name": "totalSupply",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -448,6 +611,59 @@
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "transfer",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "transferFrom",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			}
 		],
@@ -479,11 +695,11 @@
 	},
 	"sources": {
 		"SimpleSwap.sol": {
-			"keccak256": "0xd1b1fad15ce5b4ce6fe1ac20c4f5dce0798065e0012a090649fc24febfd11c53",
+			"keccak256": "0x35e118c920ebfa7b2100557c1e7709b38a971d73e99cc8c882160dbb8de91b0d",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://c5f3c8f891da9b6ad6b03532bae08fef8d9ba7a7a7e3901af9e871abc9c8fbad",
-				"dweb:/ipfs/QmWr1BFnH1vqTbHn8csGzKrDsL3HGUi6k83xcWXvyu6WGQ"
+				"bzz-raw://622eebabfc3e2977298a5d9b24275b80374b737a501df245f7fbfea11a53e420",
+				"dweb:/ipfs/QmS2mZrr1rdJxLQjADrs5rvU4Ce6gVKn28MRb8fjc4TTPi"
 			]
 		}
 	},
