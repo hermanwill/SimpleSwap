@@ -479,11 +479,11 @@
 	},
 	"sources": {
 		"SimpleSwap.sol": {
-			"keccak256": "0xfc00932ad623cc3767a60fc4d2b8248b6e5e8f6439e09aa570749d34ba7397f7",
+			"keccak256": "0xd1b1fad15ce5b4ce6fe1ac20c4f5dce0798065e0012a090649fc24febfd11c53",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://7f19fa67c8422f0686acdc6c0ed3d172c3406da409b7b981a0230ceac43cdaf5",
-				"dweb:/ipfs/QmdaC9t7nevTNJ678D3bfaQ6NLmnT5zRyy3Uv7EUDDpGsd"
+				"bzz-raw://c5f3c8f891da9b6ad6b03532bae08fef8d9ba7a7a7e3901af9e871abc9c8fbad",
+				"dweb:/ipfs/QmWr1BFnH1vqTbHn8csGzKrDsL3HGUi6k83xcWXvyu6WGQ"
 			]
 		}
 	},

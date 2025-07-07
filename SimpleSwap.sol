@@ -19,7 +19,7 @@ contract SimpleSwap {
         
         tokenEKA = _tokenEKA;
         tokenEKB = _tokenEKB;
-        totalLiquidity = 1000;
+        totalLiquidity = 1000; // Initialize without external calls
     }
 
     modifier ensure(uint256 deadline) {
@@ -118,7 +118,7 @@ contract SimpleSwap {
         return (amountIn * reserveOut) / (reserveIn + amountIn);
     }
 
-    // Internal helper functions to avoid stack too deep
+    // Internal helper functions - Only called during function execution, not deploy
 
     function _calculateLiquidityAmounts(
         address tokenA,
